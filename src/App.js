@@ -1,7 +1,66 @@
-import React from "react";
+import { Routes, Route } from "react-router-dom";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { useEffect, useState } from "react";
+
+import Home from "./components/Home";
+import Navbar from "./components/Navbar";
+import About from "./components/About";
+import Login from "./components/Login";
+import Register from "./components/Register";
+import RequireAuth2 from "./components/RequireAuth2";
+import RequireAuth from "./components/RequireAuth";
+import Profile from "./components/Profile";
+import NotFound from "./components/NotFound";
+import app from "./firebase/firebase.init";
+
+const auth = getAuth(app);
 
 const App = () => {
-  return <div className="text-3xl">App</div>;
+  const [user, setUser] = useState("");
+
+  useEffect(() => {
+    onAuthStateChanged(auth, (data) => {
+      if (data) {
+        setUser(data);
+      } else {
+        console.log("No user");
+      }
+    });
+  }, []);
+  return (
+    <div className="app">
+      <Navbar user={user} />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
+        <Route
+          path="/profile"
+          element={
+            <RequireAuth user={user}>
+              <Profile user={user} setUser={setUser} />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/login"
+          element={
+            <RequireAuth2 user={user}>
+              <Login />
+            </RequireAuth2>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <RequireAuth2 user={user}>
+              <Register />
+            </RequireAuth2>
+          }
+        />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </div>
+  );
 };
 
 export default App;
